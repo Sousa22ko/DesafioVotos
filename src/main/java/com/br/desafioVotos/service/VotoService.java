@@ -37,12 +37,6 @@ public class VotoService extends GenericService<Voto, VotoRepository> {
 			throw new Exception("Pauta ou associado não encontrado");
 		}
 
-		List<Voto> voto = this.repository.findVotoByPautaAssociado(associado.getId(), pauta.getId());
-
-		if (voto.size() > 0)
-			throw new Exception("Voto do associado " + entity.getAssociado().getCpf() + " ja cadastrado para a pauta "
-					+ entity.getPauta().getAtaDaPauta());
-
 		List<Pauta> abertas = pService.pautasAbertas();
 		if (abertas.size() == 0)
 			throw new Exception("A sessão da pauta '" + pauta.getAtaDaPauta() + "' não foi aberta");
@@ -50,6 +44,10 @@ public class VotoService extends GenericService<Voto, VotoRepository> {
 		Pauta aberta = abertas.get(0);
 		if (pauta.getId() != aberta.getId())
 			throw new Exception("A sessão da pauta '" + pauta.getAtaDaPauta() + "' não foi aberta");
+		
+		List<Voto> voto = this.repository.findVotoByPautaAssociado(associado.getId(), pauta.getId());
+		if (voto.size() > 0)
+			throw new Exception("Voto do associado " + associado.getCpf() + " ja cadastrado para a pauta '" + pauta.getAtaDaPauta() + "'");
 	}
 
 	@Override

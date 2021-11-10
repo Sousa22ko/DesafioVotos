@@ -15,7 +15,7 @@ public class Cronometro {
 
 	public Cronometro(Integer pautaID, Integer segundos) {
 		this.timer = new Timer();
-		System.err.println("Iniciar timer para " + pautaID);
+		System.err.println("Iniciar timer para pautaID " + pautaID);
 		timer.schedule(new Task(), segundos * 1000);
 		this.pautaID = pautaID;
 	}
@@ -37,7 +37,7 @@ public class Cronometro {
 			}
 
 			// finaliza a thread
-			System.err.println("Finalizar timer para " + pautaID);
+			System.err.println("Finalizar timer para pautaID" + pautaID);
 			pautaID = null;
 			timer.cancel();
 		}

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +23,7 @@ import com.br.desafioVotos.service.VotoService;
 import com.br.desafioVotos.util.Cronometro;
 
 @RestController
-@RequestMapping(path = "/mesaVotacao")//, consumes = "application/json")
+@RequestMapping(path = "/mesaVotacao")
 public class MainController {
 
 	@Autowired
@@ -35,31 +37,31 @@ public class MainController {
 
 	@PostMapping("/novaPauta")
 	@ResponseBody
-	public Pauta novaPauta(@RequestBody Pauta pauta) {
+	public ResponseEntity<Object> novaPauta(@RequestBody Pauta pauta) {
 		try {
-			return this.pService.save(pauta);
+			return new ResponseEntity<Object>(this.pService.save(pauta), HttpStatus.OK);
 		} catch (Exception e) {
 			System.err.println("Não foi possivel abrir a pauta");
 			System.err.println(e.getMessage());
-			return null;
+			return new ResponseEntity<Object>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
 	}
 	
 	@PostMapping("/novoAssociado")
 	@ResponseBody
-	public Associado novoAssociado(@RequestBody Associado associado) {
+	public ResponseEntity<Object> novoAssociado(@RequestBody Associado associado) {
 		try {
-			return this.aService.save(associado);
+			return new ResponseEntity<Object>(this.aService.save(associado), HttpStatus.OK);
 		} catch (Exception e) {
 			System.err.println("Não foi possivel cadastrar o associado");
 			System.err.println(e.getMessage());
-			return null;
+			return new ResponseEntity<Object>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		}
 	}
 
 	@GetMapping(value = { "/abrirSessao/{pautaID}/{tempoSessao}", "/abrirSessao/{pautaID}" })
 	@ResponseBody
-	public String abrirSessaoParaVoto(@PathVariable Integer pautaID, @PathVariable Integer tempoSessao) {
+	public ResponseEntity<Object> abrirSessaoParaVoto(@PathVariable Integer pautaID, @PathVariable Integer tempoSessao) {
 		if (tempoSessao == null || tempoSessao <= 0)
 			tempoSessao = 60;
 
@@ -69,31 +71,33 @@ public class MainController {
 			try {
 				pService.updateSessao(pautaID, true);
 				new Cronometro(p.getId(), tempoSessao);
-				return "Sessão aberta para votação";
+				return new ResponseEntity<Object>("Sessão aberta para votação", HttpStatus.OK);
 			} catch(Exception e) {
-				return e.getMessage();
+				return new ResponseEntity<Object>(e.getMessage(), HttpStatus.BAD_REQUEST);
 			}
 		} else
-			return "Pauta não encontrada";
+			return new ResponseEntity<Object>("Pauta não encontrada", HttpStatus.OK);
 	}
 
 	@GetMapping("/fechar/{pautaID}")
 	@ResponseBody
-	public String fecharSessaoParaVoto(@PathVariable Integer pautaID) throws Exception {
+	public ResponseEntity<Object> fecharSessaoParaVoto(@PathVariable Integer pautaID) throws Exception {
 
 		// Procurar a pauta
 		Pauta p = pService.findById(pautaID).get();
 		if (p != null) {
 			pService.updateSessao(pautaID, false);
-			return "Sessão finalizada";
+			return new ResponseEntity<Object>("Sessão finalizada", HttpStatus.OK);
 		} else
-			return "Pauta não encontrada";
+			return new ResponseEntity<Object>("Pauta não encontrada", HttpStatus.OK);
 	}
 
 	@PostMapping("/votar")
-	public String receberVotosAcossiados(@RequestBody List<Voto> listAssociados) {
+	public ResponseEntity<Object> receberVotosAcossiados(@RequestBody List<Voto> listAssociados) {
 		List<Voto> salvos = new ArrayList<Voto>();
-		for (Voto novo : listAssociados)
+		int problemas = 0;
+		
+		for (Voto novo : listAssociados) {
 			try {
 				Voto temp = this.vService.save(novo);
 				if(temp != null)
@@ -101,15 +105,20 @@ public class MainController {
 			} catch (Exception e) {
 				System.err.println("Não foi possivel votar");
 				System.err.println(e.getMessage());
-				return "Não foi possivel votar. " + e.getMessage();
+				problemas++;
+				if(e.getMessage().contains("A sessão da pauta '")) {
+					return new ResponseEntity<Object>(e.getMessage(), HttpStatus.BAD_REQUEST);
+				}
 			}
-
-		return salvos.size() + " votos adicionados com sucesso";
+		}
+		
+		String response = salvos.size() + " votos adicionados com sucesso" + (problemas > 0 ? (" e " + problemas + " itens não foram salvos"): "");
+		return new ResponseEntity<Object>(response, HttpStatus.OK);
 	}
 
 	@GetMapping("/contabilizar/{pautaID}")
-	public String contabilizar(@PathVariable Integer pautaID) {
-		return vService.contabilizar(pautaID) + " votos contabilizados na pauta";
+	public ResponseEntity<Object> contabilizar(@PathVariable Integer pautaID) {
+		return new ResponseEntity<Object>(vService.contabilizar(pautaID) + " votos contabilizados na pauta", HttpStatus.OK);
 	}
 
 }

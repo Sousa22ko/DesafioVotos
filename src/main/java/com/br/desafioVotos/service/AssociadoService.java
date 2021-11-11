@@ -20,6 +20,7 @@ public class AssociadoService extends GenericService<Associado, AssociadoReposit
 			throw new Exception("Associado com cpf ja cadastrado");
 		
 		try {
+			// consulta se o cpf do associado é valido
 			Boolean valido = CpfApi.consultarCpf(entity.getCpf()); 
 			if(!valido)
 				throw new Exception("Cpf inválido");

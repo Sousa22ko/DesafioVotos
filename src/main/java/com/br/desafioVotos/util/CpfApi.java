@@ -6,7 +6,7 @@ import org.springframework.web.client.RestTemplate;
 
 public class CpfApi {
 	
-	final static String url = "https://user-info.herokuapp.com/users/";
+	private final static String url = "https://user-info.herokuapp.com/users/";
 
 	public CpfApi() {
 	} 

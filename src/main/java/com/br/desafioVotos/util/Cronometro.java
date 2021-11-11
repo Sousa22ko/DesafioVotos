@@ -37,7 +37,7 @@ public class Cronometro {
 			}
 
 			// finaliza a thread
-			System.err.println("Finalizar timer para pautaID" + pautaID);
+			System.err.println("Finalizar timer para pautaID " + pautaID);
 			pautaID = null;
 			timer.cancel();
 		}

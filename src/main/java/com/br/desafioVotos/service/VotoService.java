@@ -33,18 +33,21 @@ public class VotoService extends GenericService<Voto, VotoRepository> {
 		Pauta pauta;
 		pauta = pService.findById(entity.getPauta().getId()).get();
 
+		//pauta não encontrada
 		if (pauta == null || associado == null) {
 			throw new Exception("Pauta ou associado não encontrado");
 		}
 
+		// voto recebido para pauta fechada
 		List<Pauta> abertas = pService.pautasAbertas();
 		if (abertas.size() == 0)
 			throw new Exception("A sessão da pauta '" + pauta.getAtaDaPauta() + "' não foi aberta");
-
+		// garantia de que o voto vai para a mesma pauta que esta aberta
 		Pauta aberta = abertas.get(0);
 		if (pauta.getId() != aberta.getId())
 			throw new Exception("A sessão da pauta '" + pauta.getAtaDaPauta() + "' não foi aberta");
-		
+
+		// verifica se o voto não esta repetido no banco
 		List<Voto> voto = this.repository.findVotoByPautaAssociado(associado.getId(), pauta.getId());
 		if (voto.size() > 0)
 			throw new Exception("Voto do associado " + associado.getCpf() + " ja cadastrado para a pauta '" + pauta.getAtaDaPauta() + "'");

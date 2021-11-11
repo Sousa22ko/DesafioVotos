@@ -23,6 +23,8 @@ public class Voto extends GenericEntity {
 	@OneToOne
 	@JoinColumn(name = "pautaID")
 	private Pauta pauta;
+	
+	private Boolean voto;
 
 	public Associado getAssociado() {
 		return associado;
@@ -40,4 +42,11 @@ public class Voto extends GenericEntity {
 		this.pauta = pauta;
 	}
 
+	public Boolean getVoto() {
+		return voto;
+	}
+
+	public void setVoto(Boolean voto) {
+		this.voto = voto;
+	}
 }

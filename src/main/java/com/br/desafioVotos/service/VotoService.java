@@ -60,5 +60,9 @@ public class VotoService extends GenericService<Voto, VotoRepository> {
 		List<Voto> listVotosDaPauta = this.repository.findVotoByPautaId(pautaID);
 		return listVotosDaPauta.size();
 	}
+	
+	public List<Voto> findByPautaID(Integer pautaID){
+		return this.repository.findVotoByPautaId(pautaID);
+	}
 
 }

@@ -2,6 +2,8 @@ package com.br.desafioVotos.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -61,16 +63,14 @@ public class MainController {
 
 	@GetMapping(value = { "/abrirSessao/{pautaID}/{tempoSessao}", "/abrirSessao/{pautaID}" })
 	@ResponseBody
-	public ResponseEntity<Object> abrirSessaoParaVoto(@PathVariable Integer pautaID, @PathVariable Integer tempoSessao) {
-		if (tempoSessao == null || tempoSessao <= 0)
-			tempoSessao = 60;
+	public ResponseEntity<Object> abrirSessaoParaVoto(@PathVariable Integer pautaID, @PathVariable Optional<Integer> tempoSessao) {
 
 		// Procurar a pauta
 		Pauta p = pService.findById(pautaID).get();
 		if (p != null) {
 			try {
 				pService.updateSessao(pautaID, true);
-				new Cronometro(p.getId(), tempoSessao);
+				new Cronometro(p.getId(), tempoSessao.isPresent() ? tempoSessao.get(): 60);
 				return new ResponseEntity<Object>("Sessão aberta para votação", HttpStatus.OK);
 			} catch(Exception e) {
 				return new ResponseEntity<Object>(e.getMessage(), HttpStatus.BAD_REQUEST);
@@ -87,6 +87,7 @@ public class MainController {
 		Pauta p = pService.findById(pautaID).get();
 		if (p != null) {
 			pService.updateSessao(pautaID, false);
+			System.err.println("finalizar sessão "+ pautaID);
 			return new ResponseEntity<Object>("Sessão finalizada", HttpStatus.OK);
 		} else
 			return new ResponseEntity<Object>("Pauta não encontrada", HttpStatus.OK);
@@ -118,7 +119,14 @@ public class MainController {
 
 	@GetMapping("/contabilizar/{pautaID}")
 	public ResponseEntity<Object> contabilizar(@PathVariable Integer pautaID) {
-		return new ResponseEntity<Object>(vService.contabilizar(pautaID) + " votos contabilizados na pauta", HttpStatus.OK);
+		List<Voto> votos = vService.findByPautaID(pautaID);
+		
+		List<Voto> positivo = votos.stream().filter(voto -> voto.getVoto() == true).collect(Collectors.toList());
+		List<Voto> negativos = votos.stream().filter(voto -> voto.getVoto() == false).collect(Collectors.toList());
+		
+		
+		String response = vService.contabilizar(pautaID) + " votos contabilizados na pauta. "+ positivo.size() +" votos a favor e "+ negativos.size()+ " votos contra";
+		return new ResponseEntity<Object>(response, HttpStatus.OK);
 	}
 
 }
